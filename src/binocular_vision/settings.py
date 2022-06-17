@@ -1,5 +1,6 @@
 from lib2to3.pgen2 import driver
 
+from jose import jwt
 from pydantic import BaseSettings
 
 
@@ -14,6 +15,10 @@ class Settings(BaseSettings):
     postgres_user: str = 'user'
     postgres_password: str = '1234'
     postgres_db_name: str = 'postgres'
+
+    jwt_secret: str
+    jwt_algorithm: str = 'HS256'
+    jwt_expiration: int = 9
 
     def get_url_db(self) -> str:
         return f'{self.dialect}+{self.driver}://{self.postgres_user}:' \

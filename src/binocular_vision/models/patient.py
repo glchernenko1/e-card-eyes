@@ -1,6 +1,5 @@
 import login as login
 from pydantic import BaseModel
-from sqlalchemy import null
 
 
 class PatientBase(BaseModel):

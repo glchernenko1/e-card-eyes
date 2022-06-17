@@ -27,7 +27,6 @@ class PatientService:
         return response
 
     def create_patient(self, patient: PatientCreat) -> Patient:
-        print(patient.dict())
         patient_db = Patient(**patient.dict())
         try:
             self.session.add(patient_db)
