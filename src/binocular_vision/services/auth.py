@@ -1,8 +1,7 @@
 from datetime import datetime, timedelta
 
-from fastapi import HTTPException, status, Depends
-from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
-from pydantic import SecretStr
+from fastapi import HTTPException, status, Depends, Security
+from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer, SecurityScopes
 from passlib.hash import bcrypt
 from jose import jwt, JWTError
 from sqlalchemy import exc
@@ -14,11 +13,15 @@ from ..models.doctor import Doctor, DoctorCreate
 from ..settings import settings
 from ..models.auth import Token
 
-oauth2_schem = OAuth2PasswordBearer(tokenUrl='/auth/sing_in_doctor')
+_scopes = ['meDoctor']
+
+oauth2_schem = OAuth2PasswordBearer(
+    tokenUrl='/auth/sing_in_doctor',
+)
 
 
-def get_current_doctor(token: str = Depends(oauth2_schem)) -> Doctor:
-    return AuthService.validate_token_doctor(token)
+def get_current_doctor(security_scopes: SecurityScopes, token: str = Depends(oauth2_schem)) -> Doctor:
+    return AuthService.validate_token_doctor(security_scopes, token)
 
 
 class AuthService:
@@ -31,10 +34,15 @@ class AuthService:
         return bcrypt.hash(plain_password)
 
     @classmethod
-    def validate_token_doctor(cls, token: str) -> Doctor:
+    def validate_token_doctor(cls, security_scopes: SecurityScopes, token: str) -> Doctor:
+        if security_scopes.scopes:
+            authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
+        else:
+            authenticate_value = f"Bearer"
         exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail='Could not validate credentials'
+            detail='Could not validate credentials',
+            headers={"WWW-Authenticate": authenticate_value},
         )
         try:
             payload = jwt.decode(
@@ -42,8 +50,17 @@ class AuthService:
                 settings.jwt_secret,
                 algorithms=[settings.jwt_algorithm]
             )
+            token_scopes = payload.get("scopes", [])
         except JWTError:
             raise exception from None
+
+        for scope in security_scopes.scopes:
+            if scope not in token_scopes:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Not enough permissions",
+                    headers={"WWW-Authenticate": authenticate_value},
+                )
 
         doctor_data = payload.get('doctor_data')
         try:
@@ -64,7 +81,9 @@ class AuthService:
             'exp': now + timedelta(hours=settings.jwt_expiration),
             'sub': str(doctor_data.id),
             'doctor_data': doctor_data.dict(),
+            'scopes': _scopes
         }
+
         token = jwt.encode(
             payload,
             settings.jwt_secret,

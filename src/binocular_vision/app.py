@@ -6,7 +6,23 @@ from fastapi.responses import JSONResponse
 
 from .api import router
 
-app = FastAPI()
+tags_metadata = [
+    {
+        'name': 'auth',
+        'description': 'Авторизация и регистрация'
+    },
+    {
+        'name': 'patient',
+        'description': 'api для работы клиентской части пациентов'
+    }
+]
+
+app = FastAPI(
+    title='binocular_vision',
+    description='Электронная история болезни',
+    version='1.0.0',
+    openapi_tags=tags_metadata
+)
 app.include_router(router)
 
 

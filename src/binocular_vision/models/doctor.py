@@ -1,8 +1,3 @@
-import email
-
-import login as login
-import password as password
-import pydantic
 from pydantic import BaseModel, EmailStr, SecretStr, validator
 
 
@@ -13,7 +8,7 @@ class DoctorBase(BaseModel):
 
 
 class DoctorCreate(DoctorBase):
-    password: str #SecretStr  # get_secret_value()
+    password: str  # SecretStr  # get_secret_value()
 
     @validator('password')
     def password_should_be_longer_eight_character(cls, v: str) -> str:
@@ -24,9 +19,6 @@ class DoctorCreate(DoctorBase):
 
 class Doctor(DoctorBase):
     id: int
+
     class Config:
         orm_mode = True
-
-
-
-

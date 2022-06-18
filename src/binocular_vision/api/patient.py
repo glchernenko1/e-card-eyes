@@ -12,13 +12,14 @@ from ..services.patient import PatientService
 
 router = APIRouter(
     prefix='/patient',
+    tags=['patient']
 )
 
 
 @router.get('/get-all-patients', response_model=List[Patient])
 def get_patients(
         services: PatientService = Depends()):
-    return  services.get_list_patients()
+    return services.get_list_patients()
 
 
 @router.get('/get-patient', response_model=Patient)

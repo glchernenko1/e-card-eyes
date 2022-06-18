@@ -1,5 +1,5 @@
 import current as current
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Security
 
 from fastapi.security import OAuth2PasswordRequestForm
 
@@ -12,6 +12,7 @@ from ..services.auth import AuthService, get_current_doctor
 
 router = APIRouter(
     prefix='/auth',
+    tags=['auth']
 )
 
 
@@ -20,6 +21,14 @@ def sing_up_doctor(
         doctor_data: DoctorCreate,
         services: AuthService = Depends()
 ):
+    '''
+    Регистрация доктора
+    - **doctor_data**: Схема доктора.
+    \f
+    :param doctor_data:
+    :param services:
+    :return:
+    '''
     return services.register_new_doctor(doctor_data)
 
 
@@ -36,7 +45,7 @@ def sing_in_doctor(
 
 
 @router.get('/doctor', response_model=Doctor)
-def get_doctor(doctor: Doctor = Depends(get_current_doctor)):
+def get_doctor(doctor: Doctor = Security(get_current_doctor, scopes=['meDoctor'])):
     return doctor
 
 
