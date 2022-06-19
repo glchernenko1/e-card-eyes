@@ -1,7 +1,7 @@
 from typing import List
 
 import login
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Security
 from pydantic.class_validators import Optional
 from sqlalchemy.orm import Session
 
@@ -16,6 +16,12 @@ router = APIRouter(
 )
 
 
+@router.get('/patient', response_model=Patient)
+def get_patient(
+        doctor: Patient = Security(PatientService.get_current_doctor, scopes=['me_patient'])):
+    return doctor
+
+
 @router.get('/get-all-patients', response_model=List[Patient])
 def get_patients(
         services: PatientService = Depends()):
@@ -28,11 +34,3 @@ def get_patients(
         services: PatientService = Depends(),
 ):
     return services.get_patient(id)
-
-
-@router.post('/create_patient', response_model=Patient)
-def create_patient(
-        patient: PatientCreat,
-        services: PatientService = Depends(),
-):
-    return services.create_patient(patient)

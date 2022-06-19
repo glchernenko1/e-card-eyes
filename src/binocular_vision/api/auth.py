@@ -8,7 +8,7 @@ from ..models.doctor import (
     DoctorCreate,
     Doctor,
 )
-from ..services.auth import AuthService, get_current_doctor
+from ..services.auth import AuthService
 
 router = APIRouter(
     prefix='/auth',
@@ -44,16 +44,19 @@ def sing_in_doctor(
     )
 
 
-@router.get('/doctor', response_model=Doctor)
-def get_doctor(doctor: Doctor = Security(get_current_doctor, scopes=['meDoctor'])):
-    return doctor
 
 
-@router.post('/sign_up_patient')
-def sing_up_patient():
-    pass
+
+# @router.post('/sign_up_patient')
+# def sing_up_patient():
+#     pass
 
 
-@router.post('/sing_in_patient')
-def sing_in_patient():
-    pass
+@router.post('/sing_in_patient', response_model=Token)
+def sing_in_patient(
+        from_data: OAuth2PasswordRequestForm = Depends(),
+        services: AuthService = Depends(),):
+    return services.authenticated_patient(
+        from_data.username,
+        from_data.password,
+    )

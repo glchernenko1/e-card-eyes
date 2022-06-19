@@ -18,7 +18,8 @@ class Settings(BaseSettings):
 
     jwt_secret: str
     jwt_algorithm: str = 'HS256'
-    jwt_expiration: int = 9
+    jwt_expiration_doctor: int = 9
+    jwt_expiration_patient: int = 1
 
     def get_url_db(self) -> str:
         return f'{self.dialect}+{self.driver}://{self.postgres_user}:' \

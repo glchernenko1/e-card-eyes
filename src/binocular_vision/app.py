@@ -14,6 +14,10 @@ tags_metadata = [
     {
         'name': 'patient',
         'description': 'api для работы клиентской части пациентов'
+    },
+    {
+      'name': 'doctor',
+      'description':  'api для работы клиентской части доктора'
     }
 ]
 
