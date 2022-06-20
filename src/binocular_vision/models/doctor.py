@@ -6,6 +6,11 @@ class DoctorBase(BaseModel):
     login: str
     email: EmailStr
 
+    @validator('full_name')
+    def full_name_validator(cls, v: str) -> str:
+        v = v.strip().join(v.split())
+        return v
+
 
 class DoctorCreate(DoctorBase):
     password: str  # SecretStr  # get_secret_value()

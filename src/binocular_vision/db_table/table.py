@@ -36,6 +36,8 @@ class Patient(Base):
     full_name_current_dockter = sa.Column(sa.String, nullable=False)
     correct_diagnosis = sa.Column(sa.String)
     confirmed_diagnosis = sa.Column(sa.Boolean)
+
+    tasks = relationship('Tasks')
     doctors = relationship('Doctor', secondary=doctors_patients, back_populates='patients', lazy='dynamic')
     medical_history = relationship('MedicalHistory', lazy='dynamic')
 
@@ -44,6 +46,14 @@ class Patient(Base):
                f'password_hash={self.password_hash}, full_name_current_dockter= {self.full_name_current_dockter},' \
                f'correct_diagnosis={self.correct_diagnosis}, confirmed_diagnosis={self.confirmed_diagnosis},' \
                f'doctors = {self.doctors}, medical_history = {self.medical_history})'
+
+
+class Tasks(Base):
+    __tablename__ = 'tasks'
+    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
+    patient_id = sa.Column(sa.Integer, sa.ForeignKey('patient.id'))
+    quantity = sa.Column(sa.Integer, nullable=False)
+    task = sa.Column(sa.String, nullable=False)
 
 
 class Doctor(Base):

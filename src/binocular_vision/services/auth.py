@@ -14,7 +14,7 @@ from ..models.patient import Patient, PatientCreat
 from ..settings import settings
 from ..models.auth import Token
 
-_scopes_doctor = ['me_doctor', 'create_patient']
+_scopes_doctor = ['me_doctor', 'create_patient', 'get_my_list_patient', 'list_patient']
 _scopes_patient = ['me_patient']
 
 

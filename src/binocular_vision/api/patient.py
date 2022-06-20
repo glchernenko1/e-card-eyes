@@ -18,7 +18,7 @@ router = APIRouter(
 
 @router.get('/patient', response_model=Patient)
 def get_patient(
-        doctor: Patient = Security(PatientService.get_current_doctor, scopes=['me_patient'])):
+        doctor: Patient = Security(PatientService.get_current_patient, scopes=['me_patient'])):
     return doctor
 
 

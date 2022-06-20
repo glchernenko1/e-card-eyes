@@ -23,8 +23,8 @@ class PatientService:
         self.session = session
 
     @staticmethod
-    def get_current_doctor(security_scopes: SecurityScopes, token: str = Depends(oauth2_schem_patient),
-                           services: AuthService = Depends()) -> Patient:
+    def get_current_patient(security_scopes: SecurityScopes, token: str = Depends(oauth2_schem_patient),
+                            services: AuthService = Depends()) -> Patient:
         return services.validate_token_patient(security_scopes, token)
 
     def get_list_patients(self, ) -> List[Patient]:
