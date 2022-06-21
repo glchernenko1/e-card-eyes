@@ -1,18 +1,22 @@
 import math
 from datetime import datetime
 
-from fastapi import Depends, Security, HTTPException
+from fastapi import Depends, Security, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from sqlalchemy.orm import Session
-from starlette import status
+from sqlalchemy import func, delete
 
 from .auth import _scopes_doctor, AuthService
+from .statistic import Statistics
 from ..database import get_session
 from ..db_table import table
-from ..models.doctor import Doctor
+from ..models.auth import Token
+from ..models.doctor import Doctor, ChangePasswordDoctor
 from ..models.medical_history import CreateMedicalHistory, MedicalHistory, BaseMedicalHistory
-from ..models.paginationbase import PaginationBase, PaginationPatient, Pagination
+from ..models.pagination import PaginationBase, PaginationPatient, Pagination, PaginationMedicalHistory, \
+    PaginationProgressPatientOneIteration
 from ..models.patient import Patient, PatientCreat, Diagnosis, TasksCreate
+from ..models.progress_patient import ProgressPatientOneIteration, ProgressPatientBase, ProgressPatient
 
 oauth2_schem_doctor = OAuth2PasswordBearer(
     tokenUrl='auth/sing_in_doctor',
@@ -68,15 +72,60 @@ class DoctorService:
         return PaginationPatient(page=pagination.page, size=pagination.size, total=pagination.total,
                                  patient_list=patients_out)
 
+    @staticmethod
+    def _helper_create_paginate_medical_history(
+            pagination: Pagination,
+            medical_histories: list[table.MedicalHistory]) -> PaginationMedicalHistory:
+
+        medical_history_out = [MedicalHistory.from_orm(medical_history) for medical_history in medical_histories]
+
+        return PaginationMedicalHistory(page=pagination.page, size=pagination.size, total=pagination.total,
+                                        medical_history_list=medical_history_out)
+
+    @staticmethod
+    def _helper_create_paginate_progress_patient_one_iteration(
+            pagination: Pagination,
+            progress_patient: list[table.ProgressPatientOneIteration]) -> PaginationProgressPatientOneIteration:
+
+        medical_history_out = [ProgressPatientOneIteration.from_orm(x) for x in progress_patient]
+
+        return PaginationProgressPatientOneIteration(page=pagination.page, size=pagination.size, total=pagination.total,
+                                                     progress_patient_one_iteration_list=medical_history_out)
+
+    def _helper_get_current_doctor(self) -> table.Doctor:
+        doctor = (self.session
+                  .query(table.Doctor)
+                  .filter(table.Doctor.id == self._doctor.id)
+                  .first())
+        return doctor
+
+    def _helper_get_patient_by_id(self, id: int) -> table.Patient:
+        patient = (self.session
+                   .query(table.Patient)
+                   .filter(table.Patient.id == id).first())
+        if patient is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        return patient
+
+    def _helper_swap_doctor(self, patient: table.Patient):
+        """
+
+        :param patient:
+        :return: закомитить после использования в orm
+        """
+        contain = patient.doctors.filter(table.Doctor.id == self._doctor.id).count()
+
+        if contain < 1:
+            _doctor = self._helper_get_current_doctor()
+
+            patient.full_name_current_dockter = self._doctor.full_name
+            patient.doctors.append(_doctor)
+
     def get_my_list_patient(self, page: int, size: int, ) -> PaginationPatient:
 
         pagination_base = self._helper_validate_PaginationBase(page, size)
 
-        doctor: table.Doctor = (self.session
-                                .query(table.Doctor)
-                                .filter(table.Doctor.id == self._doctor.id)
-                                .first())
-
+        doctor = self._helper_get_current_doctor()
         pagination = self._helper_create_paginate(pagination_base, doctor.patients.count())
 
         patients = (doctor.patients
@@ -109,37 +158,20 @@ class DoctorService:
         patients_out = [Patient.from_orm(patient) for patient in patients]
         return patients_out
 
-    def search_patient_login(self, login: str, ) -> Patient:
+    def search_patient_login(self, login: str, ) -> list[Patient]:
         _login = login.strip().join(login.split())
 
         patient = (self.session
                    .query(table.Patient)
-                   .filter(table.Patient.full_name.ilike(_login))
+                   .filter(table.Patient.login.ilike(_login))
                    .first())
-        return Patient.from_orm(patient)
 
-    def _helper_get_patient_by_id(self, id: int) -> table.Patient:
-        patient = (self.session
-                   .query(table.Patient)
-                   .filter(table.Patient == id).first())
         if patient is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-        return patient
+            return []
+        return [Patient.from_orm(patient)]
 
     def get_patient_by_id(self, id: int) -> Patient:
         return Patient.from_orm(self._helper_get_patient_by_id(id))
-
-    def _helper_swap_doctor(self, patient: table.Patient):
-        contain = patient.doctors.filter(table.Doctor.id == self._doctor.id).count()
-
-        if contain < 1:
-            _doctor = (self.session
-                       .query(table.Doctor)
-                       .filter(table.Doctor.id == self._doctor.id)
-                       .first())
-
-            patient.full_name_current_dockter = self._doctor.full_name
-            patient.doctors.append(_doctor)
 
     def update_current_correct_diagnosis(self, id: int, diagnosis: Diagnosis) -> Patient:
         patient = self._helper_get_patient_by_id(id)
@@ -152,27 +184,30 @@ class DoctorService:
     def add_new_medical_history(self, id: int, medical_history: CreateMedicalHistory) -> MedicalHistory:
         patient: table.Patient = self._helper_get_patient_by_id(id)
         self._helper_swap_doctor(patient)
-        up_medical_history = table.MedicalHistory(date=datetime.now(), text=medical_history.text)
+        doctor = self.get_current_doctor()
+        up_medical_history = table.MedicalHistory(date=datetime.now(),
+                                                  doctor=doctor.full_name,
+                                                  text=medical_history.text)
         patient.medical_history.append(up_medical_history)
         self.session.commit()
         return MedicalHistory.from_orm(up_medical_history)
 
-    def get_medical_history(self, id: int, page: int, size: int, ) -> list[MedicalHistory]:
+    def get_medical_history(self, id: int, page: int, size: int, ) -> PaginationMedicalHistory:
         pagination_base = self._helper_validate_PaginationBase(page, size)
         patient = self._helper_get_patient_by_id(id)
 
         pagination = self._helper_create_paginate(pagination_base, patient.medical_history.count())
 
         medical_histories = (patient.medical_history
-                             .order_by(-table.Patient.id)
+                             .order_by(-table.MedicalHistory.id)
                              .offset((pagination.page - 1) * pagination.size)
                              .limit(pagination.size).all())
-        patients_out = [MedicalHistory.from_orm(medical_history) for medical_history in medical_histories]
-        return patients_out
+        return self._helper_create_paginate_medical_history(pagination, medical_histories)
 
     def add_task_patient(self, id: int, tasks: list[TasksCreate]) -> Patient:
         patient = self._helper_get_patient_by_id(id)
-        patient.tasks.append(tasks)
+        for task in tasks:
+            patient.tasks.append(table.Tasks(task=task.task, quantity=task.quantity))
         self.session.commit()
         return Patient.from_orm(patient)
 
@@ -181,13 +216,48 @@ class DoctorService:
         if patient.tasks is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-        id_del_tasks = [task.id for task in patient.tasks]
+        id_tasks_patient = [task.id for task in patient.tasks]
         for task_id in tasks_id:
-            if not (tasks_id in tasks_id):
-                HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-        del_task = (self.session
-                    .query(table.Tasks)
-                    .filter(table.Tasks.id in tasks_id)
-                    .all())
-        self.session.delete(del_task)
+            if not (task_id in id_tasks_patient):
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        del_task = (delete(table.Tasks)
+                    .where(table.Tasks.id.in_(tasks_id)))
+        self.session.execute(del_task)
+        self.session.commit()
         return Patient.from_orm(patient)
+
+    def get_progress_patient_one_iteration(self,
+                                           id: int,
+                                           page: int, size: int) -> PaginationProgressPatientOneIteration:
+        pagination_base = self._helper_validate_PaginationBase(page, size)
+        patient = self._helper_get_patient_by_id(id)
+        pagination = self._helper_create_paginate(pagination_base, patient.progress_patient.count())
+        progress_patient = (patient.progress_patient
+                            .order_by(-table.ProgressPatientOneIteration.id)
+                            .offset((pagination.page - 1) * pagination.size)
+                            .limit(pagination.size).all())
+        return self._helper_create_paginate_progress_patient_one_iteration(pagination, progress_patient)
+
+    def change_password_doctor(self, password: ChangePasswordDoctor) -> Token:
+        doctor = self._helper_get_current_doctor()
+        if not self.services.verify_password(password.old_password, doctor.password_hash):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Неверный пароль')
+        doctor.password_hash = self.services.hash_password(password.new_password)
+        self.session.commit()
+        return self.services.create_token_doctor(doctor)
+
+    def change_password_patient(self, id: int, new_password: str) -> str:
+        patient = self._helper_get_patient_by_id(id)
+        patient.password_hash = self.services.hash_password(new_password)
+        self.session.commit()
+        return 'ok'
+
+    def statistic_two_end(self, id: int, ) -> list[ProgressPatientBase]:
+        patient = self._helper_get_patient_by_id(id)
+        progress_patient = (patient.progress_patient
+                            .order_by(table.ProgressPatientOneIteration.id.desc())
+                            .limit(2).all())
+        if progress_patient is None:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Нехватает данных')
+        progress_patient_model = [ProgressPatientOneIteration.from_orm(x) for x in progress_patient]
+        return Statistics.statistic_two_end(progress_patient_model)

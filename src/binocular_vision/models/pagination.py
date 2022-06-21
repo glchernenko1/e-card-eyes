@@ -1,6 +1,9 @@
 from pydantic import BaseModel, validator
 
+from binocular_vision.models import medical_history
+from binocular_vision.models.medical_history import MedicalHistory
 from binocular_vision.models.patient import Patient
+from binocular_vision.models.progress_patient import ProgressPatientOneIteration
 
 
 class PaginationBase(BaseModel):
@@ -30,3 +33,11 @@ class PaginationPatient(Pagination):
     """
 
     patient_list: list[Patient]
+
+
+class PaginationMedicalHistory(Pagination):
+    medical_history_list: list[MedicalHistory]
+
+
+class PaginationProgressPatientOneIteration(Pagination):
+    progress_patient_one_iteration_list: list[ProgressPatientOneIteration]

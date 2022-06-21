@@ -1,4 +1,3 @@
-import login as login
 from pydantic import BaseModel, validator
 from enum import Enum
 
@@ -15,6 +14,9 @@ class TasksBase(BaseModel):
 
 class Tasks(TasksBase):
     id: int
+
+    class Config:
+        orm_mode = True
 
 
 class TasksCreate(TasksBase):

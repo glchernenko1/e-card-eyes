@@ -1,17 +1,21 @@
 from fastapi import APIRouter, Security, Depends
 
-from binocular_vision.models.doctor import Doctor
-from binocular_vision.models.paginationbase import PaginationBase, PaginationPatient
-from binocular_vision.models.patient import Patient, PatientCreat
-from binocular_vision.services.doctor import DoctorService
+from ..models.auth import Token
+from ..models.doctor import Doctor, ChangePasswordDoctor
+from ..models.pagination import PaginationPatient
+from ..models.patient import Patient, PatientCreat
+from ..services.doctor import DoctorService
+from .doctor_patient import router as doctor_patient
 
 router = APIRouter(
     prefix='/doctor',
     tags=['doctor']
 )
 
+router.include_router(doctor_patient)
 
-@router.get('/doctor', response_model=Doctor)
+
+@router.get('/', response_model=Doctor)
 def get_doctor(
         services: DoctorService = Security(DoctorService, scopes=['me_doctor'])):
     return services.get_current_doctor()
@@ -37,4 +41,23 @@ def get_all_list_patient(
         services: DoctorService = Security(DoctorService, scopes=['list_patient'])):
     return services.get_all_list_patient(page, size)
 
-# @router.get('/')
+
+@router.get('/search_patient_full_name', response_model=list[Patient])
+def search_patient_full_name(
+        patient_name: str,
+        services: DoctorService = Security(DoctorService, scopes=['search_patient'])):
+    return services.search_patient_full_name(patient_name)
+
+
+@router.get('/search_patient_login', response_model=list[Patient])
+def search_patient_full_name(
+        patient_login: str,
+        services: DoctorService = Security(DoctorService, scopes=['search_patient'])):
+    return services.search_patient_login(patient_login)
+
+
+@router.patch('/change_password', response_model=Token)
+def change_password_doctor(
+        password: ChangePasswordDoctor,
+        services: DoctorService = Security(DoctorService, scopes=['change_my_password_doctor'])):
+    return services.change_password_doctor(password)

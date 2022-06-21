@@ -10,6 +10,7 @@ class BaseMedicalHistory(BaseModel):
 class MedicalHistory(BaseMedicalHistory):
     id: int
     date: datetime
+    doctor: str
     patient_id: int
 
     class Config:

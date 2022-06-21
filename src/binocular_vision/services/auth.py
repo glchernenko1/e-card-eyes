@@ -14,8 +14,19 @@ from ..models.patient import Patient, PatientCreat
 from ..settings import settings
 from ..models.auth import Token
 
-_scopes_doctor = ['me_doctor', 'create_patient', 'get_my_list_patient', 'list_patient']
-_scopes_patient = ['me_patient']
+_scopes_doctor = [
+    'me_doctor', 'create_patient', 'get_my_list_patient',
+    'list_patient', 'search_patient', 'get_patient_by_id',
+    'update_diagnosis', 'add_medical_history', 'get_medical_history',
+    'add_tasks', 'delete_tasks', 'get_progress_patient',
+    'change_my_password_doctor', 'change_password_patient',
+    'get_statistic_patient'
+]
+_scopes_patient = [
+    'me_patient', 'my_task', 'create_progress',
+    'add_progress', 'add_progress', 'change_my_password_patient',
+    'get_my_statistic'
+]
 
 
 class AuthService:
@@ -24,7 +35,7 @@ class AuthService:
         return bcrypt.verify(plain_password, password_hash)
 
     @classmethod
-    def has_password(cls, plain_password: str) -> str:
+    def hash_password(cls, plain_password: str) -> str:
         return bcrypt.hash(plain_password)
 
     # Handler
@@ -163,7 +174,7 @@ class AuthService:
             full_name=doctor_data.full_name,
             login=doctor_data.login,
             email=doctor_data.email,
-            password_hash=self.has_password(doctor_data.password)
+            password_hash=self.hash_password(doctor_data.password)
         )
 
         patient_login_noun = (self.session
@@ -221,7 +232,7 @@ class AuthService:
         _patient = table.Patient(
             full_name=patient.full_name,
             login=patient.login,
-            password_hash=self.has_password(patient.password),
+            password_hash=self.hash_password(patient.password),
             full_name_current_dockter=_doctor.full_name,
         )
 

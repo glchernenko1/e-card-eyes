@@ -18,7 +18,11 @@ tags_metadata = [
     {
       'name': 'doctor',
       'description':  'api для работы клиентской части доктора'
-    }
+    },
+    # {
+    #     'name': 'doctor/patient',
+    #     'description': 'api для работы клиентской части доктора с конкретным пациентом'
+    # }
 ]
 
 app = FastAPI(

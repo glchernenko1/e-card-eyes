@@ -18,12 +18,29 @@ doctors_patients = sa.Table('doctor_patient',
 class MedicalHistory(Base):
     __tablename__ = 'medical_history'
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
-    date: date = sa.Column(sa.Date, nullable=False)
+    date = sa.Column(sa.DateTime, nullable=False)
+    doctor = sa.Column(sa.String, nullable=False)
     text = sa.Column(sa.Text, nullable=False)
     patient_id = sa.Column(sa.Integer, sa.ForeignKey('patient.id'))
 
     def __repr__(self):
         return f'MedicalHistory(id={self.id}, date={self.date}, text={self.text}, patient_id={self.patient_id})'
+
+
+class ProgressPatient(Base):
+    __tablename__ = 'progress_patient'
+    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
+    patient_id = sa.Column(sa.Integer, sa.ForeignKey('progress_patient_one_iteration.id'))
+    progress_type = sa.Column(sa.String, nullable=False)
+    progress_value = sa.Column(sa.Integer, nullable=False)
+
+
+class ProgressPatientOneIteration(Base):
+    __tablename__ = 'progress_patient_one_iteration'
+    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
+    patient_id = sa.Column(sa.Integer, sa.ForeignKey('patient.id'))
+    date = sa.Column(sa.DateTime, nullable=False)
+    progress = relationship('ProgressPatient')
 
 
 class Patient(Base):
@@ -40,6 +57,7 @@ class Patient(Base):
     tasks = relationship('Tasks')
     doctors = relationship('Doctor', secondary=doctors_patients, back_populates='patients', lazy='dynamic')
     medical_history = relationship('MedicalHistory', lazy='dynamic')
+    progress_patient = relationship('ProgressPatientOneIteration', lazy='dynamic')
 
     def __repr__(self):
         return f'Patient(id={self.id}, full_name={self.full_name}, login={self.login}, ' \
