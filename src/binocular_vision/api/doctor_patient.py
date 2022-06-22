@@ -34,7 +34,7 @@ def add_new_medical_history(
     return services.add_new_medical_history(id, medical_history)
 
 
-@router.get('/{id}/medical_history', response_model=PaginationMedicalHistory)
+@router.get('/{id}/medical_history/{page}', response_model=PaginationMedicalHistory)
 def get_medical_history(
         id: int,
         page: int, size: int,
