@@ -898,3 +898,66 @@ def test_statistic_two_end():
     )
 
     assert response.status_code == 404
+
+
+def test_change_password_patient():
+    client_db_all()
+    response = client.post(
+        '/auth/sign_up_doctor',
+        json={
+            "full_name": "test1",
+            "login": "test1",
+            "email": "user1@example.com",
+            "password": "testtest"
+        }
+    )
+    response = client.post(
+        '/auth/sing_in_doctor',
+        data={"username": "test1", "password": "testtest"},
+
+    )
+    token_doctor = response.json()['access_token']
+
+    response = client.post(
+        '/doctor/sing_up_patient',
+        headers={
+            "Authorization": f"Bearer {token_doctor}",
+        },
+        json={
+            'full_name': 'string',
+            'login': 'string',
+            'password': 'string',
+        }
+    )
+
+    id_patient = response.json()['id']
+
+    response = client.patch(
+        f'/doctor/patient/{id_patient}/change_password',
+        headers={
+            "Authorization": f"Bearer {token_doctor}",
+        },
+        json={
+            'password': 'password'
+        }
+    )
+    assert response.status_code == 200
+    assert response.json() == 'ok'
+
+    response = client.post(
+        '/auth/sing_in_patient',
+        data={"username": "string", "password": "password"},
+
+    )
+    assert response.status_code == 200
+
+    response = client.patch(
+        f'/doctor/patient/0/change_password',
+        headers={
+            "Authorization": f"Bearer {token_doctor}",
+        },
+        json={
+            'password': 'password'
+        }
+    )
+    assert response.status_code == 404

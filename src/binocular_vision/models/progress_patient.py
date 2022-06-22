@@ -32,3 +32,11 @@ class ProgressPatientOneIteration(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class Password(BaseModel):
+    password: str
+
+
+class PasswordChange(Password):
+    new_password: str

@@ -3,7 +3,7 @@ from fastapi import APIRouter, Security, status
 from ..models.medical_history import MedicalHistory, CreateMedicalHistory
 from ..models.pagination import PaginationMedicalHistory, PaginationProgressPatientOneIteration
 from ..models.patient import Patient, Diagnosis, TasksCreate
-from ..models.progress_patient import ProgressPatientBase
+from ..models.progress_patient import ProgressPatientBase, Password
 from ..services.doctor import DoctorService
 
 router = APIRouter(
@@ -69,9 +69,9 @@ def get_progress_patient(
 @router.patch('/{id}/change_password', response_model=str)
 def change_password_patient(
         id: int,
-        password: str,
+        password: Password,
         services: DoctorService = Security(DoctorService, scopes=['change_password_patient'])):
-    return services.change_password_patient(id, password)
+    return services.change_password_patient(id, password.password)
 
 
 @router.get('/{id}/statistic_two_end', response_model=list[ProgressPatientBase])

@@ -34,7 +34,7 @@ class PatientService:
         self._patient = services.validate_token_patient(security_scopes, token)
 
     def get_current_patient(self, ) -> Patient:
-        return self._patient
+        return Patient.from_orm(self._helper_get_current_patient())
 
     def _helper_get_current_patient(self) -> table.Patient:
         patient = (self.session
@@ -53,9 +53,10 @@ class PatientService:
         return last_progress_iteration
 
     def get_current_task(self) -> list[Tasks]:
-        if self._patient.tasks is None:
+        patient = Patient.from_orm(self._helper_get_current_patient())
+        if patient.tasks is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-        return self._patient.tasks
+        return patient.tasks
 
     def create_progress_patient_one_iteration(self) -> str:
         patient = self._helper_get_current_patient()

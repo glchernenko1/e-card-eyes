@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from ..database import get_session
 from ..models.auth import Token
 from ..models.patient import Patient, PatientCreat, Tasks
-from ..models.progress_patient import ProgressPatientCreate, ProgressPatientBase
+from ..models.progress_patient import ProgressPatientCreate, ProgressPatientBase, PasswordChange
 
 from ..services.patient import PatientService
 
@@ -52,10 +52,9 @@ def add_progress_to_last_iteration(
 
 @router.patch('/change_password', response_model=Token)
 def change_password_doctor(
-        old_password: str,
-        new_password: str,
+        password: PasswordChange,
         services: PatientService = Security(PatientService, scopes=['change_my_password_patient'])):
-    return services.change_password(old_password, new_password)
+    return services.change_password(password.password, password.new_password)
 
 
 @router.get('/statistic_two_end', response_model=list[ProgressPatientBase])
