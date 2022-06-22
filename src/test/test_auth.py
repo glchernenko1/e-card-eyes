@@ -1,5 +1,3 @@
-from fastapi.security import OAuth2PasswordRequestForm
-
 from main import client, client_db_all
 
 
@@ -261,7 +259,7 @@ def test_sing_in_patient_fail_password():
     )
     token = response.json()['access_token']
 
-    response1 = client.post(
+    response = client.post(
         '/doctor/sing_up_patient',
         headers={
             "Authorization": f"Bearer {token}",
@@ -301,7 +299,7 @@ def test_sing_in_patient_fail_login():
     )
     token = response.json()['access_token']
 
-    response1 = client.post(
+    response = client.post(
         '/doctor/sing_up_patient',
         headers={
             "Authorization": f"Bearer {token}",

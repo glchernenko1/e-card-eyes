@@ -28,14 +28,14 @@ def sing_in_patient(
     return services.sing_up_patient(patient)
 
 
-@router.get('/doctor_list_patient', response_model=PaginationPatient)
+@router.get('/doctor_list_patient/{page}', response_model=PaginationPatient)
 def get_my_list_patient(
         page: int, size: int,
         services: DoctorService = Security(DoctorService, scopes=['get_my_list_patient'])):
     return services.get_my_list_patient(page, size)
 
 
-@router.get('/list_patient', response_model=PaginationPatient)
+@router.get('/list_patient/{page}', response_model=PaginationPatient)
 def get_all_list_patient(
         page: int, size: int,
         services: DoctorService = Security(DoctorService, scopes=['list_patient'])):
