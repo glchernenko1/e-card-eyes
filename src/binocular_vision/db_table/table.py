@@ -30,7 +30,7 @@ class MedicalHistory(Base):
 class ProgressPatient(Base):
     __tablename__ = 'progress_patient'
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
-    patient_id = sa.Column(sa.Integer, sa.ForeignKey('progress_patient_one_iteration.id'))
+    progress_patient_one_iteration_id = sa.Column(sa.Integer, sa.ForeignKey('progress_patient_one_iteration.id'))
     progress_type = sa.Column(sa.String, nullable=False)
     progress_value = sa.Column(sa.Integer, nullable=False)
 

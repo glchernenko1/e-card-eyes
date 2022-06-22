@@ -44,18 +44,10 @@ def sing_in_doctor(
     )
 
 
-
-
-
-# @router.post('/sign_up_patient')
-# def sing_up_patient():
-#     pass
-
-
 @router.post('/sing_in_patient', response_model=Token)
 def sing_in_patient(
         from_data: OAuth2PasswordRequestForm = Depends(),
-        services: AuthService = Depends(),):
+        services: AuthService = Depends(), ):
     return services.authenticated_patient(
         from_data.username,
         from_data.password,

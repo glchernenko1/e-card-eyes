@@ -21,7 +21,7 @@ def get_doctor(
     return services.get_current_doctor()
 
 
-@router.post('/sing_in_patient', response_model=Patient)
+@router.post('/sing_up_patient', response_model=Patient)
 def sing_in_patient(
         patient: PatientCreat,
         services: DoctorService = Security(DoctorService, scopes=['create_patient'])):

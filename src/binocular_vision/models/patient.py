@@ -49,8 +49,13 @@ class Patient(PatientBase):
         orm_mode = True
 
 
-class PatientCreat(PatientBase):
+class PatientCreat(BaseModel):
+    full_name: str
+    login: str
     password: str
 
-    class Config:
-        full_name_current_dockter = 'ignore'
+    @validator('full_name')
+    def full_name_validator(cls, v: str) -> str:
+        v = v.strip().join(v.split())
+        return v
+
