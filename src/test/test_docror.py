@@ -709,3 +709,71 @@ def test_search_patient_login():
                                 'id': json[0]['id'],
                                 'login': 'string1',
                                 'tasks': []}]
+
+
+def test_change_password():
+    client_db_all()
+    response = client.post(
+        '/auth/sign_up_doctor',
+        json={
+            "full_name": "test1",
+            "login": "test1",
+            "email": "user1@example.com",
+            "password": "testtest"
+        }
+    )
+    response = client.post(
+        '/auth/sing_in_doctor',
+        data={"username": "test1", "password": "testtest"},
+
+    )
+    token = response.json()['access_token']
+
+    response = client.patch(
+        'doctor/change_password',
+        headers={
+            "Authorization": f"Bearer {token}",
+        },
+        json={
+            "old_password": "testtest1",
+            "new_password": "testtest"
+        }
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {'detail': 'Неверный пароль'}
+
+    response = client.patch(
+        'doctor/change_password',
+        headers={
+            "Authorization": f"Bearer {token}",
+        },
+        json={
+            "old_password": "testtest",
+            "new_password": "tes"
+        }
+    )
+    assert response.status_code == 422
+
+    response = client.patch(
+        'doctor/change_password',
+        headers={
+            "Authorization": f"Bearer {token}",
+        },
+        json={
+            "old_password": "testtest",
+            "new_password": "testtest1"
+        }
+    )
+
+    assert response.status_code == 200
+
+    response = client.post(
+        '/auth/sing_in_doctor',
+        data={"username": "test1", "password": "testtest1"},
+    )
+
+    assert response.status_code == 200
+
+
+
