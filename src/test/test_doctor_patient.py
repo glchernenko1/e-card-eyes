@@ -394,4 +394,92 @@ def test_get_medical_history():
     )
     assert response.status_code == 404
 
-def test_
+
+def test_add_task():
+    client_db_all()
+    response = client.post(
+        '/auth/sign_up_doctor',
+        json={
+            "full_name": "test1",
+            "login": "test1",
+            "email": "user1@example.com",
+            "password": "testtest"
+        }
+    )
+    response = client.post(
+        '/auth/sing_in_doctor',
+        data={"username": "test1", "password": "testtest"},
+
+    )
+    token1 = response.json()['access_token']
+
+    response = client.post(
+        '/doctor/sing_up_patient',
+        headers={
+            "Authorization": f"Bearer {token1}",
+        },
+        json={
+            'full_name': 'string',
+            'login': 'string',
+            'password': 'string',
+        }
+    )
+
+    id_patient = response.json()['id']
+
+    response = client.post(
+        f'doctor/patient/{id_patient}/tasks',
+        headers={
+            "Authorization": f"Bearer {token1}",
+        },
+        json=[
+            {
+                "task": "classic",
+                "quantity": 0
+            },
+            {
+                "task": "no_classic",
+                "quantity": 0
+            },
+        ]
+    )
+    assert response.status_code == 200
+    json = response.json()
+    assert response.json() == {'confirmed_diagnosis': None,
+                               'correct_diagnosis': None,
+                               'full_name': 'string',
+                               'full_name_current_dockter': 'test1',
+                               'id': json['id'],
+                               'login': 'string',
+                               'tasks': [{'id': json['tasks'][0]['id'], 'quantity': 0, 'task': 'classic'},
+                                         {'id': json['tasks'][1]['id'], 'quantity': 0, 'task': 'no_classic'}]}
+
+    response = client.post(
+        f'doctor/patient/0/tasks',
+        headers={
+            "Authorization": f"Bearer {token1}",
+        },
+        json=[
+            {
+                "task": "classic",
+                "quantity": 0
+            }
+        ]
+    )
+    assert response.status_code == 404
+
+    response = client.post(
+        f'doctor/patient/{id_patient}/tasks',
+        headers={
+            "Authorization": f"Bearer {token1}",
+        },
+        json=[
+            {
+                "task": "classic1",
+                "quantity": 0
+            }
+        ]
+    )
+    assert response.status_code == 422
+
+
