@@ -58,7 +58,7 @@ def dell_task_patient(
     return services.dell_task_patient(id, tasks_id)
 
 
-@router.get('/{id}/progress', response_model=PaginationProgressPatientOneIteration)
+@router.get('/{id}/progress/{page}', response_model=PaginationProgressPatientOneIteration)
 def get_progress_patient(
         id: int,
         page: int, size: int,

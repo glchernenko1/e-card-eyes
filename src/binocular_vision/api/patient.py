@@ -36,11 +36,11 @@ def create_progress_patient_one_iteration(
     return services.create_progress_patient_one_iteration()
 
 
-@router.post('/add_progress_to_last_iteration', response_model=str)
-def add_progress_to_last_iteration(
-        progress: ProgressPatientCreate,
-        services: PatientService = Security(PatientService, scopes=['add_progress'])):
-    return services.add_progress_to_last_iteration(progress)
+# @router.post('/add_progress_to_last_iteration', response_model=str)
+# def add_progress_to_last_iteration(
+#         progress: ProgressPatientCreate,
+#         services: PatientService = Security(PatientService, scopes=['add_progress'])):
+#     return services.add_progress_to_last_iteration(progress)
 
 
 @router.post('/add_list_progress_to_last_iteration', response_model=str)
