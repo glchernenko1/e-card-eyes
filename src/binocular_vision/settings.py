@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     postgres_password: str = '1234'
     postgres_db_name: str = 'postgres'
 
-    test_active: bool = True
+    test_active: bool = False
     port_db_out_test: str = 8080
     postgres_db_name_test: str = 'postgres'
 
@@ -41,4 +41,4 @@ class Settings(BaseSettings):
         env_file_encoding = 'utf-8'
 
 
-settings = Settings(_env_file='../../.env')
+settings = Settings(_env_file='../.env')

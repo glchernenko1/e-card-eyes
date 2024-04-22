@@ -1,4 +1,3 @@
-import doctor as doctor
 import sqlalchemy as sa
 from sqlalchemy import null
 from sqlalchemy.orm import relationship
